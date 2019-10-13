@@ -5,17 +5,15 @@ import './index.css';
 // State
 // Components use state to 'remember things'
 // React components can have state by setting this.state in their constructors
+// State is considered tio be private to a component that defines it
+
+// bad approach: have board ask each square for its state
+// proper approach: store the games state in the parent Board
 
 
 class Square extends React.Component {
-  constructor(props) {
-    // super() must be called when defining the constructor of a subclass
-    // all react component classes that have a constructor should start it with a super(props) call
-    super(props);  
-    this.state = {
-      value: null,
-    };
-  }
+  // since this does not maintain state (instead it gets it from a parent), its known
+  // as a 'controlled component'
 
   render() {
     return (
@@ -25,20 +23,42 @@ class Square extends React.Component {
       // is rendered
       <button 
         className="square" 
-        // calling this.setState from the onClick tells react to re-render the square whenever the button is clicked
-        // when you call setState in a component, react automatically updates the child components inside of it too
-        onClick={() => this.setState({value: 'X'})} 
+        onClick={() => this.props.onClick()} 
       >
-        {this.state.value}
+        {this.props.value}
       </button>
     );
   }
 }
   
 class Board extends React.Component {
+  constructor(props){
+    // super() must be called when defining the constructor of a subclass
+    // all react component classes that have a constructor should start it with a super(props) call
+    super(props);
+    this.state = {
+      squares: Array(9).fill(null),
+    };
+  }
+
+  handleClick(i) {
+    // bad approach: mutate squares directly
+    // good apporach: replace squares with an updated copy (immutability example).
+    //   this a better approach since it makes the following easier: 
+    //        deteting changes
+    //        determining when to re-render
+    //        mainitaining state history
+    //        easier refactoring
+
+    const squares = this.state.squares.slice(); // slice creates a copy
+    squares[i] = 'X';
+    this.setState({squares: squares});
+  }
+
   renderSquare(i) {
     // we pass the prop "value" from the parent Board to the child Square
-    return <Square value={i} />;
+    // the prop onClick is a function that Square can call when clicked
+    return <Square value={this.state.squares[i]} onClick={() => this.handleClick(i)}/>;
   }
 
   render() {
